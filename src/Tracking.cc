@@ -246,7 +246,7 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     cout << "wait for new segment img time  =" << ttrack*1000 << endl;
     // Remove dynamic points
     mCurrentFrame.CalculEverything(mImRGB,mImGray,mImDepth,mpSegment->mImgSegmentLatest);
-    
+
     mImS = mpSegment->mImgSegmentLatest;
     mImS_C = mpSegment->mImgSegment_color_final;
     Track();

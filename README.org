@@ -1,0 +1,41 @@
+* Build
+** Build and install /caffe-segnet-cudnn5/
+#+begin_src sh
+git clone https://github.com/yubaoliu/semseg
+cd SegNet/caffe-segnet
+mkdir build
+cd build
+cmake .. -CMAKE_INSTALL_PREFIX=<PATH>/DS-SLAM/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5
+make & make install
+#+end_src
+
+** Build DS-SLAM
+
+About caffe-segnet-cudnn5 directory:
+#+begin_example
+ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5$ tree -L 1
+.
+├── bin
+├── include
+├── lib
+├── python
+└── share
+#+end_example
+
+#+begin_example
+git clone https://github.com/yubaoliu/DS-SLAM.git
+#+end_example
+* Run
+#+begin_example
+roscore
+
+rosbag play -l --clock freiburg3/rgbd_dataset_freiburg3_walking_xyz.bag
+
+roslaunch DS_SLAM_TUM3.launch
+#+end_example
+
+* Prototxt
+Please download from the author's baidu disk. 
+There is the folder of models(provided at https://pan.baidu.com/s/1gkI7nAvijF5Fjj0DTR0rEg extract code: fpa3), please download and place the folder in the same path with the folder of prototxts and tools.
+
+

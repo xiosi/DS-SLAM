@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 3.0 QUIET)
+find_package(OpenCV 3.1 QUIET)
 if(NOT OpenCV_FOUND)
    find_package(OpenCV 2.4.3 QUIET)
    if(NOT OpenCV_FOUND)
@@ -45,7 +45,7 @@ ${Pangolin_INCLUDE_DIRS}
 ${PCL_INCLUDE_DIRS}
 ${OpenCV_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5/include 
-${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5/build/include
+#${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5/build/include
 /usr/local/include  
 /usr/local/cuda/include
 /usr/include  
@@ -87,10 +87,12 @@ ${Pangolin_LIBRARIES}
 ${PCL_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
-${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5/build/lib/libcaffe.so  
-/usr/lib/x86_64-linux-gnu/libglog.so  
+${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/caffe-segnet-cudnn5/lib/libcaffe.so  
+#/usr/lib/x86_64-linux-gnu/libglog.so  
+#/home/yubao/software/lib/libglog.so  
 -lboost_system
 ${PROJECT_SOURCE_DIR}/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/libsegmentation/build/libsegmentation.so
 ${catkin_LIBRARIES}
+glog
 )
 

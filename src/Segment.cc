@@ -40,75 +40,74 @@ using namespace std;
 
 namespace ORB_SLAM2
 {
-Segment::Segment(const string &pascal_prototxt, const string &pascal_caffemodel, const string &pascal_png):mbFinishRequested(false),mSkipIndex(SKIP_NUMBER),mSegmentTime(0),imgIndex(0)
+Segment::Segment(const string &pascal_prototxt, const string &pascal_caffemodel, const string &pascal_png) : mbFinishRequested(false), mSkipIndex(SKIP_NUMBER), mSegmentTime(0), imgIndex(0)
 {
 
     model_file = pascal_prototxt;
     trained_file = pascal_caffemodel;
     LUT_file = pascal_png;
-    label_colours = cv::imread(LUT_file,1);
+    label_colours = cv::imread(LUT_file, 1);
+    //Author change B and G chanel
     cv::cvtColor(label_colours, label_colours, CV_RGB2BGR);
-    mImgSegmentLatest=cv::Mat(Camera::height,Camera::width,CV_8UC1);
-    mbNewImgFlag=false;
-
+    mImgSegmentLatest = cv::Mat(Camera::height, Camera::width, CV_8UC1);
+    mbNewImgFlag = false;
 }
 
 void Segment::SetTracker(Tracking *pTracker)
 {
-    mpTracker=pTracker;
+    mpTracker = pTracker;
 }
 
 bool Segment::isNewImgArrived()
 {
     unique_lock<mutex> lock(mMutexGetNewImg);
-    if(mbNewImgFlag)
+    if (mbNewImgFlag)
     {
-        mbNewImgFlag=false;
+        mbNewImgFlag = false;
         return true;
     }
     else
-    return false;
+        return false;
 }
 
 void Segment::Run()
 {
-    classifier=new Classifier(model_file, trained_file);
-    cout << "Load model ..."<<endl;
-    while(1)
+    classifier = new Classifier(model_file, trained_file);
+    cout << "Load model ..." << endl;
+
+    while (1)
     {
 
         usleep(1);
-        if(!isNewImgArrived())
-        continue;
+        if (!isNewImgArrived())
+            continue;
 
         cout << "Wait for new RGB img time =" << endl;
-        if(mSkipIndex==SKIP_NUMBER)
+        if (mSkipIndex == SKIP_NUMBER)
         {
             std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
             // Recognise by Semantin segmentation
-            mImgSegment=classifier->Predict(mImg, label_colours);
+            mImgSegment = classifier->Predict(mImg, label_colours);
 
             mImgSegment_color = mImgSegment.clone();
-            cv::cvtColor(mImgSegment,mImgSegment_color, CV_GRAY2BGR);
+            cv::cvtColor(mImgSegment, mImgSegment_color, CV_GRAY2BGR);
 
-            LUT(mImgSegment_color, label_colours, mImgSegment_color_final);
-            cv::resize(mImgSegment, mImgSegment, cv::Size(Camera::width,Camera::height) );
-            cv::resize(mImgSegment_color_final, mImgSegment_color_final, cv::Size(Camera::width,Camera::height) );
+            LUT(mImgSegment_color, label_colours, mImgSegment_color_final); //LUT:: Look up table
+            cv::resize(mImgSegment, mImgSegment, cv::Size(Camera::width, Camera::height));
+            cv::resize(mImgSegment_color_final, mImgSegment_color_final, cv::Size(Camera::width, Camera::height));
 
             std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
-            mSegmentTime+=std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count();
-            mSkipIndex=0;
+            mSegmentTime += std::chrono::duration_cast<std::chrono::duration<double>>(t4 - t3).count();
+            mSkipIndex = 0;
             imgIndex++;
         }
         mSkipIndex++;
         ProduceImgSegment();
-        if(CheckFinish())
+        if (CheckFinish())
         {
             break;
         }
-
     }
-
 }
 
 bool Segment::CheckFinish()
@@ -116,20 +115,20 @@ bool Segment::CheckFinish()
     unique_lock<mutex> lock(mMutexFinish);
     return mbFinishRequested;
 }
-  
+
 void Segment::RequestFinish()
 {
     unique_lock<mutex> lock(mMutexFinish);
-    mbFinishRequested=true;
+    mbFinishRequested = true;
 }
 
 void Segment::ProduceImgSegment()
 {
-    std::unique_lock <std::mutex> lock(mMutexNewImgSegment);
-    mImgTemp=mImgSegmentLatest;
-    mImgSegmentLatest=mImgSegment;
-    mImgSegment=mImgTemp;
-    mpTracker->mbNewSegImgFlag=true;
+    std::unique_lock<std::mutex> lock(mMutexNewImgSegment);
+    mImgTemp = mImgSegmentLatest;
+    mImgSegmentLatest = mImgSegment;
+    mImgSegment = mImgTemp;
+    mpTracker->mbNewSegImgFlag = true;
 }
 
-}
+} // namespace ORB_SLAM2
