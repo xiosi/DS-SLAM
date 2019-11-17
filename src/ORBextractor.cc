@@ -1056,6 +1056,9 @@ void ORBextractor::DeleteOneRowOfMat(cv::Mat &object, int num)
     }
 }
 
+/**
+ * T:  Sets for abnormal points
+ */
 int ORBextractor::CheckMovingKeyPoints(const cv::Mat &imGray, const cv::Mat &imS, std::vector<std::vector<cv::KeyPoint>> &mvKeysT, std::vector<cv::Point2f> T)
 {
 
@@ -1063,7 +1066,6 @@ int ORBextractor::CheckMovingKeyPoints(const cv::Mat &imGray, const cv::Mat &imS
     int flag_orb_mov = 0;
 
     // Make further judgment
-
     for (int i = 0; i < T.size(); i++)
     {
         for (int m = -15; m < 15; m++)
@@ -1131,6 +1133,10 @@ int ORBextractor::CheckMovingKeyPoints(const cv::Mat &imGray, const cv::Mat &imS
     }
     return flag_orb_mov;
 }
+
+/**
+ * DS-SLAM added
+ */
 void ORBextractor::operator()(cv::InputArray _image, cv::InputArray _mask, vector<vector<cv::KeyPoint>> &_keypoints)
 {
     if (_image.empty())
@@ -1144,6 +1150,9 @@ void ORBextractor::operator()(cv::InputArray _image, cv::InputArray _mask, vecto
     ComputeKeyPointsOctTree(_keypoints);
 }
 
+/**
+ * DS-SLAM added
+ */
 void ORBextractor::ProcessDesp(cv::InputArray _image, cv::InputArray _mask, vector<vector<cv::KeyPoint>> &_allKeypoints,
                                vector<cv::KeyPoint> &_mKeypoints, cv::OutputArray _descriptors)
 {

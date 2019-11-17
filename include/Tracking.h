@@ -77,20 +77,20 @@ class System;
 class Segment;
 
 class Tracking
-{ 
+{
 
 public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, Map* pMap, boost::shared_ptr<PointCloudMapping> pPointCloud, 
-	     KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor);
+    Tracking(System *pSys, ORBVocabulary *pVoc, Map *pMap, boost::shared_ptr<PointCloudMapping> pPointCloud,
+             KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
-    cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);
-    cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp);
+    cv::Mat GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp);
+    cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const double &timestamp);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp);
 
-    void SetLocalMapper(LocalMapping* pLocalMapper);
-    void SetLoopClosing(LoopClosing* pLoopClosing);
-    void SetViewer(Viewer* pViewer);
+    void SetLocalMapper(LocalMapping *pLocalMapper);
+    void SetLoopClosing(LoopClosing *pLoopClosing);
+    void SetViewer(Viewer *pViewer);
 
     // Load new settings
     // The focal lenght should be similar or scale prediction will fail when projecting points
@@ -103,11 +103,11 @@ public:
     // Tracking states
     enum eTrackingState
     {
-        SYSTEM_NOT_READY=-1,
-        NO_IMAGES_YET=0,
-        NOT_INITIALIZED=1,
-        OK=2,
-        LOST=3
+        SYSTEM_NOT_READY = -1,
+        NO_IMAGES_YET = 0,
+        NOT_INITIALIZED = 1,
+        OK = 2,
+        LOST = 3
     };
 
     eTrackingState mState;
@@ -120,9 +120,9 @@ public:
     // Current Frame
     Frame mCurrentFrame;
     cv::Mat mImGray;
-    cv::Mat mImS;
-    cv::Mat mImS_C;
-    cv::Mat mImRGB;// adding for color point map  by zoe
+    cv::Mat mImS;     //segmented image
+    cv::Mat mImS_C;   //segmented image with color
+    cv::Mat mImRGB;   // adding for color point map  by zoe
     cv::Mat mImDepth; // adding mImDepth member to realize pointcloud view
 
     // Initialization Variables (Monocular)
@@ -135,7 +135,7 @@ public:
     // Lists used to recover the full camera trajectory at the end of the execution.
     // Basically we store the reference keyframe for each frame and its relative transformation
     list<cv::Mat> mlRelativeFramePoses;
-    list<KeyFrame*> mlpReferences;
+    list<KeyFrame *> mlpReferences;
     list<double> mlFrameTimes;
     list<bool> mlbLost;
 
@@ -144,11 +144,11 @@ public:
 
     void Reset();
     // For the semantic segmentation thread
-    Segment* mpSegment;
+    Segment *mpSegment;
     cv::Mat mImgNew;
     std::condition_variable mbcvImgNew;
     void GetImg(const cv::Mat &img);
-    void SetSegment(Segment* segment);
+    void SetSegment(Segment *segment);
     bool isNewSegmentImgArrived();
     bool mbNewSegImgFlag;
 
@@ -187,33 +187,33 @@ protected:
     bool mbVO;
 
     // Other Thread Pointers
-    LocalMapping* mpLocalMapper;
-    LoopClosing* mpLoopClosing;
+    LocalMapping *mpLocalMapper;
+    LoopClosing *mpLoopClosing;
 
     // ORB
-    ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
-    ORBextractor* mpIniORBextractor;
+    ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
+    ORBextractor *mpIniORBextractor;
 
     // BoW
-    ORBVocabulary* mpORBVocabulary;
-    KeyFrameDatabase* mpKeyFrameDB;
+    ORBVocabulary *mpORBVocabulary;
+    KeyFrameDatabase *mpKeyFrameDB;
 
     // Initalization (only for monocular)
-    Initializer* mpInitializer;
+    Initializer *mpInitializer;
 
     // Local Map
-    KeyFrame* mpReferenceKF;
-    std::vector<KeyFrame*> mvpLocalKeyFrames;
-    std::vector<MapPoint*> mvpLocalMapPoints;
-    
+    KeyFrame *mpReferenceKF;
+    std::vector<KeyFrame *> mvpLocalKeyFrames;
+    std::vector<MapPoint *> mvpLocalMapPoints;
+
     // System
-    System* mpSystem;
-    
+    System *mpSystem;
+
     // Drawers
-    Viewer* mpViewer;
+    Viewer *mpViewer;
 
     // Map
-    Map* mpMap;
+    Map *mpMap;
 
     //New KeyFrame rules (according to fps)
     int mMinFrames;
@@ -231,7 +231,7 @@ protected:
     int mnMatchesInliers;
 
     // Last Frame, KeyFrame and Relocalisation Info
-    KeyFrame* mpLastKeyFrame;
+    KeyFrame *mpLastKeyFrame;
     Frame mLastFrame;
     unsigned int mnLastKeyFrameId;
     unsigned int mnLastRelocFrameId;
@@ -241,16 +241,17 @@ protected:
 
     // Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;
-	
-	// For point cloud viewing
+
+    // For point cloud viewing
     boost::shared_ptr<PointCloudMapping> mpPointCloudMapping;
 
-    list<MapPoint*> mlpTemporalPoints;
+    list<MapPoint *> mlpTemporalPoints;
+
 private:
-	bool _Track_full();
-	bool _Track_loc_only();
+    bool _Track_full();
+    bool _Track_loc_only();
 };
 
-} //namespace ORB_SLAM
+} // namespace ORB_SLAM2
 
 #endif // TRACKING_H

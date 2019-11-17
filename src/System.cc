@@ -80,19 +80,21 @@ namespace ORB_SLAM2
 {
 
 System::System(const string &strVocFile, const string &strSettingsFile, const string &pascal_prototxt, const string &pascal_caffemodel, const string &pascal_png, const eSensor sensor,
-               Viewer* pViewer, Map* map, ORBVocabulary* voc):mSensor(sensor),mbReset(false),mbActivateLocalizationMode(false),
-			   mbDeactivateLocalizationMode(false)
+               Viewer *pViewer, Map *map, ORBVocabulary *voc) : mSensor(sensor), mbReset(false), mbActivateLocalizationMode(false),
+                                                                mbDeactivateLocalizationMode(false)
 {
     clock_t tStart = clock();
-	// Output welcome message
-    cout << endl <<"Welcome !" << endl << endl;
+    // Output welcome message
+    cout << endl
+         << "Welcome !" << endl
+         << endl;
 
-	string str_sensor[] = {"Monocular", "Stereo", "RGB-D"};
+    string str_sensor[] = {"Monocular", "Stereo", "RGB-D"};
     cout << "Input sensor was set to: " << str_sensor[mSensor] << endl;
 
     // Check settings file
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
-    if(!fsSettings.isOpened())
+    if (!fsSettings.isOpened())
     {
         cerr << "Failed to open settings file at: " << strSettingsFile << endl;
         exit(-1);
@@ -104,7 +106,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     if (voc == NULL)
     {
         // Load ORB Vocabulary
-        cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+        cout << endl
+             << "Loading ORB Vocabulary. This could take a while..." << endl;
 
         mpVocabulary = new ORBVocabulary();
         bool bVocLoad = false;
@@ -112,53 +115,56 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
             bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
         else
             bVocLoad = mpVocabulary->loadFromBinaryFile(strVocFile);
-        if(!bVocLoad)
+        if (!bVocLoad)
         {
             cerr << "Wrong path to vocabulary. " << endl;
             cerr << "Failed to open at: " << strVocFile << endl;
             exit(-1);
         }
-        printf("loading duration: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-        cout << "Vocabulary loaded!" << endl << endl;
-	}
-	else
+        printf("loading duration: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
+        cout << "Vocabulary loaded!" << endl
+             << endl;
+    }
+    else
         mpVocabulary = voc;
 
-	if (!Camera::initialized) Camera::Load(fsSettings);
+    if (!Camera::initialized)
+        Camera::Load(fsSettings);
 
-        // Create KeyFrame Database
-        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
-	   
+    // Create KeyFrame Database
+    mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
     // Create the Map
-    if (map==NULL) mpMap = new Map();
-	else
-	{
-    mpMap = map;
-    for(auto kf: map->GetAllKeyFrames())
-        mpKeyFrameDatabase->add(kf);
-	}
-	 // Initialize pointcloud mapping
+    if (map == NULL)
+        mpMap = new Map();
+    else
+    {
+        mpMap = map;
+        for (auto kf : map->GetAllKeyFrames())
+            mpKeyFrameDatabase->add(kf);
+    }
+    // Initialize pointcloud mapping
 
-    mpPointCloudMapping = boost::make_shared<PointCloudMapping>( resolution );
-    
+    mpPointCloudMapping = boost::make_shared<PointCloudMapping>(resolution);
+
     // Initialize the Tracking thread
     // (it will live in the main thread of execution, the one that called this constructor)
-    
+
     mpTracker = new Tracking(this, mpVocabulary, mpMap, mpPointCloudMapping, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
     // Initialize the Local Mapping thread and launch
-    mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
-    mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run,mpLocalMapper);
+    mpLocalMapper = new LocalMapping(mpMap, mSensor == MONOCULAR);
+    mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run, mpLocalMapper);
 
     // Initialize the Loop Closing thread and launch
-    mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR);
+    mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor != MONOCULAR);
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
     // Semantic segmentation thread
-    mpSegment =new Segment( pascal_prototxt, pascal_caffemodel, pascal_png);
-    mptSegment =new thread(&ORB_SLAM2::Segment::Run,mpSegment);
+    mpSegment = new Segment(pascal_prototxt, pascal_caffemodel, pascal_png);
+    mptSegment = new thread(&ORB_SLAM2::Segment::Run, mpSegment);
     mpSegment->SetTracker(mpTracker);
+
     // Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
     mpTracker->SetLoopClosing(mpLoopCloser);
@@ -168,34 +174,34 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
 
     mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
-    
+
     //Initialize the Viewer thread and launch
     mpViewer = pViewer;
-	if (mpViewer != NULL)
-	{
+    if (mpViewer != NULL)
+    {
         mpViewer->Register(this);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
-	}
+    }
 }
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
 {
-    if(mSensor!=STEREO)
+    if (mSensor != STEREO)
     {
         cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
         exit(-1);
-    }   
+    }
 
     // Check mode change
     {
         unique_lock<mutex> lock(mMutexMode);
-        if(mbActivateLocalizationMode)
+        if (mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while (!mpLocalMapper->isStopped())
             {
                 usleep(1000);
             }
@@ -203,7 +209,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
             mpTracker->InformOnlyTracking(true);
             mbActivateLocalizationMode = false;
         }
-        if(mbDeactivateLocalizationMode)
+        if (mbDeactivateLocalizationMode)
         {
             mpTracker->InformOnlyTracking(false);
             mpLocalMapper->Release();
@@ -214,33 +220,33 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     // Check reset
     {
         unique_lock<mutex> lock(mMutexReset);
-        if(mbReset)
+        if (mbReset)
         {
             mpTracker->Reset();
             mbReset = false;
         }
     }
 
-    return mpTracker->GrabImageStereo(imLeft,imRight,timestamp);
+    return mpTracker->GrabImageStereo(imLeft, imRight, timestamp);
 }
 
 cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp)
 {
-    if(mSensor!=RGBD)
+    if (mSensor != RGBD)
     {
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
         exit(-1);
-    }    
+    }
 
     // Check mode change
     {
         unique_lock<mutex> lock(mMutexMode);
-        if(mbActivateLocalizationMode)
+        if (mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while (!mpLocalMapper->isStopped())
             {
                 usleep(1000);
             }
@@ -248,7 +254,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
             mpTracker->InformOnlyTracking(true);
             mbActivateLocalizationMode = false;
         }
-        if(mbDeactivateLocalizationMode)
+        if (mbDeactivateLocalizationMode)
         {
             mpTracker->InformOnlyTracking(false);
             mpLocalMapper->Release();
@@ -259,7 +265,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     // Check reset
     {
         unique_lock<mutex> lock(mMutexReset);
-        if(mbReset)
+        if (mbReset)
         {
             mpTracker->Reset();
             mbReset = false;
@@ -267,12 +273,12 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     }
     // Inform Semantic segmentation thread
     mpTracker->GetImg(im);
-    return  mpTracker->GrabImageRGBD(im,depthmap,timestamp);
+    return mpTracker->GrabImageRGBD(im, depthmap, timestamp);
 }
 
 cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 {
-    if(mSensor!=MONOCULAR)
+    if (mSensor != MONOCULAR)
     {
         cerr << "ERROR: you called TrackMonocular but input sensor was not set to Monocular." << endl;
         exit(-1);
@@ -281,12 +287,12 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     // Check mode change
     {
         unique_lock<mutex> lock(mMutexMode);
-        if(mbActivateLocalizationMode)
+        if (mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
 
             // Wait until Local Mapping has effectively stopped
-            while(!mpLocalMapper->isStopped())
+            while (!mpLocalMapper->isStopped())
             {
                 usleep(1000);
             }
@@ -294,7 +300,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
             mpTracker->InformOnlyTracking(true);
             mbActivateLocalizationMode = false;
         }
-        if(mbDeactivateLocalizationMode)
+        if (mbDeactivateLocalizationMode)
         {
             mpTracker->InformOnlyTracking(false);
             mpLocalMapper->Release();
@@ -305,14 +311,14 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     // Check reset
     {
         unique_lock<mutex> lock(mMutexReset);
-        if(mbReset)
+        if (mbReset)
         {
             mpTracker->Reset();
             mbReset = false;
         }
     }
 
-    return mpTracker->GrabImageMonocular(im,timestamp);
+    return mpTracker->GrabImageMonocular(im, timestamp);
 }
 
 void System::ActivateLocalizationMode()
@@ -342,22 +348,22 @@ void System::Shutdown()
         mpViewer->RequestFinish();
 
     // Wait until all thread have effectively stopped
-    while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished()  ||
-          mpLoopCloser->isRunningGBA())
+    while (!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() ||
+           mpLoopCloser->isRunningGBA())
     {
         usleep(5000);
     }
-	if (mpViewer != NULL)
-	{
-        while(!mpViewer->isFinished())
-        usleep(5000);
+    if (mpViewer != NULL)
+    {
+        while (!mpViewer->isFinished())
+            usleep(5000);
         mpViewer->Finalize();
-	}
+    }
 }
 
-Map* System::GetMap()
+Map *System::GetMap()
 {
-return this->mpMap;
+    return this->mpMap;
 }
 
 bool System::SaveMap(const string &filename)
@@ -378,10 +384,11 @@ void System::SetStatus(int status)
 
 void System::SaveTrajectoryTUM(const string &filename)
 {
-    cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
+    cout << endl
+         << "Saving camera trajectory to " << filename << " ..." << endl;
 
-    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
-    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+    vector<KeyFrame *> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
@@ -397,46 +404,49 @@ void System::SaveTrajectoryTUM(const string &filename)
 
     // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
     // which is true when tracking failed (lbL).
-    list<ORB_SLAM2::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
+    list<ORB_SLAM2::KeyFrame *>::iterator lRit = mpTracker->mlpReferences.begin();
     list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
     list<bool>::iterator lbL = mpTracker->mlbLost.begin();
-    for(list<cv::Mat>::iterator lit=mpTracker->mlRelativeFramePoses.begin(),
-        lend=mpTracker->mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++, lbL++)
+    for (list<cv::Mat>::iterator lit = mpTracker->mlRelativeFramePoses.begin(),
+                                 lend = mpTracker->mlRelativeFramePoses.end();
+         lit != lend; lit++, lRit++, lT++, lbL++)
     {
-        if(*lbL)
+        if (*lbL)
             continue;
 
-        KeyFrame* pKF = *lRit;
+        KeyFrame *pKF = *lRit;
 
-        cv::Mat Trw = cv::Mat::eye(4,4,CV_32F);
+        cv::Mat Trw = cv::Mat::eye(4, 4, CV_32F);
 
         // If the reference keyframe was culled, traverse the spanning tree to get a suitable keyframe.
-        while(pKF->isBad())
+        while (pKF->isBad())
         {
-            Trw = Trw*pKF->mTcp;
+            Trw = Trw * pKF->mTcp;
             pKF = pKF->GetParent();
         }
 
-        Trw = Trw*pKF->GetPose()*Two;
+        Trw = Trw * pKF->GetPose() * Two;
 
-        cv::Mat Tcw = (*lit)*Trw;
-        cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
-        cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
+        cv::Mat Tcw = (*lit) * Trw;
+        cv::Mat Rwc = Tcw.rowRange(0, 3).colRange(0, 3).t();
+        cv::Mat twc = -Rwc * Tcw.rowRange(0, 3).col(3);
 
         vector<float> q = Converter::toQuaternion(Rwc);
 
-        f << setprecision(6) << *lT << " " <<  setprecision(9) << twc.at<float>(0) << " " << twc.at<float>(1) << " " << twc.at<float>(2) << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+        f << setprecision(6) << *lT << " " << setprecision(9) << twc.at<float>(0) << " " << twc.at<float>(1) << " " << twc.at<float>(2) << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
     }
     f.close();
-    cout << endl << "trajectory saved!" << endl;
+    cout << endl
+         << "trajectory saved!" << endl;
 }
 
 void System::SaveKeyFrameTrajectoryTUM(const string &filename)
 {
-    cout << endl << "Saving keyframe trajectory to " << filename << " ..." << endl;
+    cout << endl
+         << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
-    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
-    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+    vector<KeyFrame *> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
@@ -445,10 +455,10 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     f.open(filename.c_str());
     f << fixed;
 
-    for(size_t i=0; i<vpKFs.size(); i++)
+    for (size_t i = 0; i < vpKFs.size(); i++)
     {
-        KeyFrame* pKF = vpKFs[i];
-        if(pKF->isBad())
+        KeyFrame *pKF = vpKFs[i];
+        if (pKF->isBad())
             continue;
 
         cv::Mat R = pKF->GetRotation().t();
@@ -459,15 +469,17 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     }
 
     f.close();
-    cout << endl << "trajectory saved!" << endl;
+    cout << endl
+         << "trajectory saved!" << endl;
 }
 
 void System::SaveTrajectoryKITTI(const string &filename)
 {
-    cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
+    cout << endl
+         << "Saving camera trajectory to " << filename << " ..." << endl;
 
-    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
-    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+    vector<KeyFrame *> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
@@ -483,35 +495,33 @@ void System::SaveTrajectoryKITTI(const string &filename)
 
     // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
     // which is true when tracking failed (lbL).
-    list<ORB_SLAM2::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
+    list<ORB_SLAM2::KeyFrame *>::iterator lRit = mpTracker->mlpReferences.begin();
     list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-    for(list<cv::Mat>::iterator lit=mpTracker->mlRelativeFramePoses.begin(), lend=mpTracker->mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++)
+    for (list<cv::Mat>::iterator lit = mpTracker->mlRelativeFramePoses.begin(), lend = mpTracker->mlRelativeFramePoses.end(); lit != lend; lit++, lRit++, lT++)
     {
-        ORB_SLAM2::KeyFrame* pKF = *lRit;
+        ORB_SLAM2::KeyFrame *pKF = *lRit;
 
-        cv::Mat Trw = cv::Mat::eye(4,4,CV_32F);
+        cv::Mat Trw = cv::Mat::eye(4, 4, CV_32F);
 
-        while(pKF->isBad())
+        while (pKF->isBad())
         {
-            Trw = Trw*pKF->mTcp;
+            Trw = Trw * pKF->mTcp;
             pKF = pKF->GetParent();
         }
 
-        Trw = Trw*pKF->GetPose()*Two;
+        Trw = Trw * pKF->GetPose() * Two;
 
-        cv::Mat Tcw = (*lit)*Trw;
-        cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
-        cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
+        cv::Mat Tcw = (*lit) * Trw;
+        cv::Mat Rwc = Tcw.rowRange(0, 3).colRange(0, 3).t();
+        cv::Mat twc = -Rwc * Tcw.rowRange(0, 3).col(3);
 
-        f << setprecision(9) << Rwc.at<float>(0,0) << " " << Rwc.at<float>(0,1)  << " " << Rwc.at<float>(0,2) << " "  << twc.at<float>(0) << " " <<
-             Rwc.at<float>(1,0) << " " << Rwc.at<float>(1,1)  << " " << Rwc.at<float>(1,2) << " "  << twc.at<float>(1) << " " <<
-             Rwc.at<float>(2,0) << " " << Rwc.at<float>(2,1)  << " " << Rwc.at<float>(2,2) << " "  << twc.at<float>(2) << endl;
+        f << setprecision(9) << Rwc.at<float>(0, 0) << " " << Rwc.at<float>(0, 1) << " " << Rwc.at<float>(0, 2) << " " << twc.at<float>(0) << " " << Rwc.at<float>(1, 0) << " " << Rwc.at<float>(1, 1) << " " << Rwc.at<float>(1, 2) << " " << twc.at<float>(1) << " " << Rwc.at<float>(2, 0) << " " << Rwc.at<float>(2, 1) << " " << Rwc.at<float>(2, 2) << " " << twc.at<float>(2) << endl;
     }
     f.close();
-    cout << endl << "trajectory saved!" << endl;
+    cout << endl
+         << "trajectory saved!" << endl;
 }
 
-} 
-
+} // namespace ORB_SLAM2
 
 //namespace ORB_SLAM2

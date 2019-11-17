@@ -85,17 +85,17 @@ public:
     Frame(const Frame &frame);
 
     // Constructor for stereo cameras.
-    Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, const float &thDepth);
+    Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor *extractorLeft, ORBextractor *extractorRight, ORBVocabulary *voc, const float &thDepth);
 
     // Constructor for RGB-D cameras.
-    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, const float &thDepth);
+    Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, ORBextractor *extractor, ORBVocabulary *voc, const float &thDepth);
 
     // Constructor for Monocular cameras.
-    Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, const float &thDepth);
+    Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor *extractor, ORBVocabulary *voc, const float &thDepth);
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
-    void ExtractORBKeyPoints(int flag,const cv::Mat &im);
-    void ExtractORBDesp(int flag,const cv::Mat &im);
+    void ExtractORBKeyPoints(int flag, const cv::Mat &im);
+    void ExtractORBDesp(int flag, const cv::Mat &im);
     // Compute Bag of Words representation.
     void ComputeBoW();
 
@@ -106,23 +106,25 @@ public:
     void UpdatePoseMatrices();
 
     // Returns the camera center.
-    inline cv::Mat GetCameraCenter(){
+    inline cv::Mat GetCameraCenter()
+    {
         return mOw.clone();
     }
 
     // Returns inverse of rotation
-    inline cv::Mat GetRotationInverse(){
+    inline cv::Mat GetRotationInverse()
+    {
         return mRwc.clone();
     }
 
     // Check if a MapPoint is in the frustum of the camera
     // and fill variables of the MapPoint to be used by the tracking
-    bool isInFrustum(MapPoint* pMP, float viewingCosLimit);
+    bool isInFrustum(MapPoint *pMP, float viewingCosLimit);
 
     // Compute the cell of a keypoint (return false if outside the grid)
     bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
 
-    vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
+    vector<size_t> GetFeaturesInArea(const float &x, const float &y, const float &r, const int minLevel = -1, const int maxLevel = -1) const;
 
     // Search a match for each keypoint in the left image to a keypoint in the right image.
     // If there is a match, depth is computed and the right coordinate associated to the left keypoint is stored.
@@ -135,24 +137,25 @@ public:
     cv::Mat UnprojectStereo(const int &i);
 
     // For semantic segmentation thread
-    void CalculEverything( cv::Mat &imRGB,const cv::Mat &imGray,const cv::Mat &imDepth,const cv::Mat &imS);
-   
-    void ProcessMovingObject(const cv::Mat &imgray );
+    void CalculEverything(cv::Mat &imRGB, const cv::Mat &imGray, const cv::Mat &imDepth, const cv::Mat &imS);
+
+    void ProcessMovingObject(const cv::Mat &imgray);
     // Sets for abnormal points
-    std::vector<cv::Point2f> T_M;
-    double limit_dis_epi =1; 
+    std::vector<cv::Point2f> T_M; //Outliers
+
+    double limit_dis_epi = 1;
     double limit_of_check = 2120;
     int limit_edge_corner = 5;
-    int flag_mov ;
+    int flag_mov;
     std::vector<std::vector<cv::KeyPoint>> mvKeysTemp;
 
 public:
     // Vocabulary used for relocalization.
-    ORBVocabulary* mpORBvocabulary;
+    ORBVocabulary *mpORBvocabulary;
     double orbExtractTime;
     double movingDetectTime;
     // Feature extractor. The right is used only in the stereo case.
-    ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
+    ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
 
     // Frame timestamp.
     double mTimeStamp;
@@ -168,7 +171,7 @@ public:
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
     std::vector<cv::KeyPoint> mvKeys, mvKeysRight;
-    
+
     std::vector<cv::KeyPoint> mvKeysUn;
 
     // Corresponding stereo coordinate and depth for each keypoint.
@@ -184,7 +187,7 @@ public:
     cv::Mat mDescriptors, mDescriptorsRight;
 
     // MapPoints associated to keypoints, NULL pointer if no association.
-    std::vector<MapPoint*> mvpMapPoints;
+    std::vector<MapPoint *> mvpMapPoints;
 
     // Flag to identify outlier associations.
     std::vector<bool> mvbOutlier;
@@ -202,7 +205,7 @@ public:
     long unsigned int mnId;
 
     // Reference Keyframe.
-    KeyFrame* mpReferenceKF;
+    KeyFrame *mpReferenceKF;
 
     // Scale pyramid info.
     int mnScaleLevels;
@@ -235,9 +238,9 @@ private:
     cv::Mat mRcw;
     cv::Mat mtcw;
     cv::Mat mRwc;
-    cv::Mat mOw; 
+    cv::Mat mOw;
 };
 
-}// namespace ORB_SLAM
+} // namespace ORB_SLAM2
 
 #endif // FRAME_H
