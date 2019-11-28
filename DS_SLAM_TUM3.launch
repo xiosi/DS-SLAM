@@ -1,5 +1,7 @@
 <launch>  
 
+<param name ="/use_sim_time" value="false"/>
+
 	<!-- orb slam  -->
 	<node pkg="ORB_SLAM2_PointMap_SegNetM" name="TUM" type="TUM" args="$(find ORB_SLAM2_PointMap_SegNetM)/../../../Vocabulary/ORBvoc.bin $(find ORB_SLAM2_PointMap_SegNetM)/TUM3.yaml /home/yubao/data/Dataset/TUM/freiburg3/rgbd_dataset_freiburg3_walking_xyz  /home/yubao/data/Dataset/TUM/freiburg3/rgbd_dataset_freiburg3_walking_xyz/associate.txt $(find ORB_SLAM2_PointMap_SegNetM)/prototxts/segnet_pascal.prototxt $(find ORB_SLAM2_PointMap_SegNetM)/models/segnet_pascal.caffemodel $(find ORB_SLAM2_PointMap_SegNetM)/tools/pascal.png" output="screen" />
 
