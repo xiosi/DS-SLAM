@@ -42,8 +42,12 @@ rosbag play -l --clock freiburg3/rgbd_dataset_freiburg3_walking_xyz.bag
 #+begin_example
 roslaunch DS_SLAM_TUM3.launch
 #+end_example
-* Prototxt
-Please download from the author's baidu disk. 
-There is the folder of models(provided at https://pan.baidu.com/s/1gkI7nAvijF5Fjj0DTR0rEg extract code: fpa3), please download and place the folder in the same path with the folder of prototxts and tools.
+
+* Caffe Modle
+#+begin_example
+https://github.com/alexgkendall/SegNet-Tutorial/blob/master/Example_Models/segnet_model_zoo.md
+#+end_example
+
+Please download and place the folder in the same path with the folder of prototxts and tools.
 
 
