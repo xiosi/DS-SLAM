@@ -1,20 +1,20 @@
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
 cd Thirdparty/DBoW2
-mkdir build
+[ ! -d "buid" ] && mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j12
+make -j2
 
 cd ../../g2o
 
 echo "------------------------------------------------"
 echo "Configuring and building Thirdparty/g2o ..."
 
-mkdir build
+[ ! -d "buid" ] && mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j12
+make -j2
 
 cd ../../../
 
@@ -22,20 +22,20 @@ echo "------------------------------------------------"
 echo "Configuring and building libsegmentation.so ..."
 
 cd Examples/ROS/ORB_SLAM2_PointMap_SegNetM/libsegmentation
-mkdir build
+[ ! -d "buid" ] && mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j12
+make -j2
 
 cd ../../../../../
 
 echo "------------------------------------------------"
 echo "Configuring and building libORB_SLAM2_PointMap_SegNetM.so ..."
 
-mkdir build
+[ ! -d "buid" ] &&  mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j12
+make -j2
 
 cd ..
 
@@ -44,12 +44,10 @@ echo "------------------------------------------------"
 echo "ROS: Configuring and building Executable TUM ..."
 
 cd Examples/ROS/ORB_SLAM2_PointMap_SegNetM
-mkdir build
+[ ! -d "buid" ] && mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j12
+make -j2
 
 cd ../../../../
-
-
 

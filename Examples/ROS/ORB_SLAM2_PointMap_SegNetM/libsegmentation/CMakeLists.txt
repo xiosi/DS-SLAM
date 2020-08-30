@@ -35,20 +35,25 @@ if(NOT OpenCV_FOUND)
    endif()
 endif()
 
+find_package(Caffe HINTS "/home/yubao/data/software/install/caffe-segnet/share/Caffe/" )
+add_definitions(${Caffe_DEFINITIONS})
+
 include_directories(
-${PROJECT_SOURCE_DIR}
-${PROJECT_SOURCE_DIR}/../caffe-segnet-cudnn5/include
+    ${PROJECT_SOURCE_DIR}
+# ${PROJECT_SOURCE_DIR}/../caffe-segnet-cudnn5/include
 #${PROJECT_SOURCE_DIR}/../caffe-segnet-cudnn5/build/include
-/usr/local/include  
-/usr/local/cuda/include
-/usr/include
+    /usr/local/include  
+    /usr/local/cuda/include
+    /usr/include
+    ${Caffe_INCLUDE_DIRS}
 ) 
 
 add_library(segmentation SHARED ${SRC_LIST}) 
 target_link_libraries(${PROJECT_NAME}
-${OpenCV_LIBS}
-${PROJECT_SOURCE_DIR}/../caffe-segnet-cudnn5/lib/libcaffe.so  
-/usr/lib/x86_64-linux-gnu/libglog.so  
--lboost_system
+    ${OpenCV_LIBS}
+# ${PROJECT_SOURCE_DIR}/../caffe-segnet-cudnn5/lib/libcaffe.so  
+    ${Caffe_LIBRARIES}
+    /usr/lib/x86_64-linux-gnu/libglog.so  
+    -lboost_system
 )
 

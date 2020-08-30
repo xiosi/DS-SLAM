@@ -31,13 +31,13 @@
  *--------------------------------------------------------------------------------------------------
  */
 
-#include <tf/transform_broadcaster.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/Pose.h>
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include <geometry_msgs/Pose.h>
+#include <nav_msgs/Odometry.h>
+#include <tf/transform_broadcaster.h>
 
-#include <octomap/octomap.h>
 #include <octomap/ColorOcTree.h>
+#include <octomap/octomap.h>
 
 #include <../../../include/System.h>
 
@@ -52,7 +52,7 @@ geometry_msgs::PoseWithCovarianceStamped Cam_odom;
 
 cv::Mat Camera_Pose;
 tf::Transform orb_slam;
-tf::TransformBroadcaster *orb_slam_broadcaster;
+tf::TransformBroadcaster* orb_slam_broadcaster;
 std::vector<float> Pose_quat(4);
 std::vector<float> Pose_trans(3);
 
@@ -61,20 +61,18 @@ double lastx = 0, lasty = 0, lastth = 0;
 unsigned int a = 0, b = 0;
 octomap::ColorOcTree tree(0.05);
 
-void Pub_CamPose(cv::Mat &pose);
+void Pub_CamPose(cv::Mat& pose);
 
-void LoadImages(const string &strAssociationFilename, vector<string> &vstrImageFilenamesRGB,
-                vector<string> &vstrImageFilenamesD, vector<double> &vTimestamps);
+void LoadImages(const string& strAssociationFilename, vector<string>& vstrImageFilenamesRGB, vector<string>& vstrImageFilenamesD, vector<double>& vTimestamps);
 typedef octomap::ColorOcTree::leaf_iterator it_t;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
+    ::google::InitGoogleLogging(argv[0]);
     ros::init(argc, argv, "TUM");
     ros::start();
-    ::google::InitGoogleLogging(argv[0]);
 
-    if (argc != 8)
-    {
+    if (argc != 8) {
         cerr << endl
              << "Usage: TUM path_to_vocabulary path_to_settings path_to_sequence path_to_association path_to_prototxt path_to_caffemodel path_to_pascal.png" << endl;
         return 1;
@@ -90,21 +88,18 @@ int main(int argc, char **argv)
 
     // Check consistency in the number of images and depthmaps
     int nImages = vstrImageFilenamesRGB.size();
-    if (vstrImageFilenamesRGB.empty())
-    {
+    if (vstrImageFilenamesRGB.empty()) {
         cerr << endl
              << "No images found in provided path." << endl;
         return 1;
-    }
-    else if (vstrImageFilenamesD.size() != vstrImageFilenamesRGB.size())
-    {
+    } else if (vstrImageFilenamesD.size() != vstrImageFilenamesRGB.size()) {
         cerr << endl
              << "Different number of images for rgb and depth." << endl;
         return 1;
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::Viewer *viewer;
+    ORB_SLAM2::Viewer* viewer;
     viewer = new ORB_SLAM2::Viewer();
     ORB_SLAM2::System SLAM(argv[1], argv[2], argv[5], argv[6], argv[7], ORB_SLAM2::System::RGBD, viewer);
     usleep(50);
@@ -134,13 +129,11 @@ int main(int argc, char **argv)
     current_time = ros::Time::now();
     last_time = ros::Time::now();
     int ni = 0;
-    while (ros::ok() && ni < nImages)
-    {
+    while (ros::ok() && ni < nImages) {
         imRGB = cv::imread(string(argv[3]) + "/" + vstrImageFilenamesRGB[ni], CV_LOAD_IMAGE_UNCHANGED);
         imD = cv::imread(string(argv[3]) + "/" + vstrImageFilenamesD[ni], CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
-        if (imRGB.empty())
-        {
+        if (imRGB.empty()) {
             cerr << endl
                  << "Failed to load image at: "
                  << string(argv[3]) << "/" << vstrImageFilenamesRGB[ni] << endl;
@@ -166,8 +159,7 @@ int main(int argc, char **argv)
         else if (ni > 0)
             T = tframe - vTimestamps[ni - 1];
 
-        if (ttrack < T)
-        {
+        if (ttrack < T) {
             usleep((T - ttrack) * 1e6);
         }
         ni++;
@@ -180,22 +172,23 @@ int main(int argc, char **argv)
     // Tracking time statistics
     sort(vTimesTrack.begin(), vTimesTrack.end());
     double totaltime = 0;
-    for (int ni = 0; ni < nImages; ni++)
-    {
+    for (int ni = 0; ni < nImages; ni++) {
         totaltime += vTimesTrack[ni];
     }
     double orbTotalTime = 0;
-    for (int ni = 0; ni < nImages; ni++)
-    {
+    for (int ni = 0; ni < nImages; ni++) {
         orbTotalTime += vOrbTime[ni];
     }
     double movingTotalTime = 0;
-    for (int ni = 0; ni < nImages; ni++)
-    {
+    for (int ni = 0; ni < nImages; ni++) {
         movingTotalTime += vMovingTime[ni];
     }
     cout << "-------" << endl
          << endl;
+
+    cout << "Total frames: " << nImages << endl;
+    cout << "vTimesTrack.size: " << vTimesTrack.size() << endl;
+    cout << "Total time: " << totaltime << endl;
     cout << "median tracking time: " << vTimesTrack[nImages / 2] << endl;
     cout << "mean tracking time: " << totaltime / nImages << endl;
     cout << "mean orb extract time =" << orbTotalTime / nImages << endl;
@@ -210,7 +203,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void Pub_CamPose(cv::Mat &pose)
+void Pub_CamPose(cv::Mat& pose)
 {
     cv::Mat Rwc(3, 3, CV_32F);
     cv::Mat twc(3, 1, CV_32F);
@@ -220,9 +213,7 @@ void Pub_CamPose(cv::Mat &pose)
     {
         Rwc = Rwc;
         twc = twc;
-    }
-    else
-    {
+    } else {
         Rwc = pose.rowRange(0, 3).colRange(0, 3).t();
         twc = -Rwc * pose.rowRange(0, 3).col(3);
 
@@ -253,12 +244,12 @@ void Pub_CamPose(cv::Mat &pose)
         Cam_odom.header.frame_id = "/map";
         tf::pointTFToMsg(orb_slam.getOrigin(), Cam_odom.pose.pose.position);
         tf::quaternionTFToMsg(orb_slam.getRotation(), Cam_odom.pose.pose.orientation);
-        Cam_odom.pose.covariance = {0.01, 0, 0, 0, 0, 0,
-                                    0, 0.01, 0, 0, 0, 0,
-                                    0, 0, 0.01, 0, 0, 0,
-                                    0, 0, 0, 0.01, 0, 0,
-                                    0, 0, 0, 0, 0.01, 0,
-                                    0, 0, 0, 0, 0, 0.01};
+        Cam_odom.pose.covariance = { 0.01, 0, 0, 0, 0, 0,
+            0, 0.01, 0, 0, 0, 0,
+            0, 0, 0.01, 0, 0, 0,
+            0, 0, 0, 0.01, 0, 0,
+            0, 0, 0, 0, 0.01, 0,
+            0, 0, 0, 0, 0, 0.01 };
 
         CamPose_Pub.publish(Cam_Pose);
         Camodom_Pub.publish(Cam_odom);
@@ -293,17 +284,15 @@ void Pub_CamPose(cv::Mat &pose)
     }
 }
 
-void LoadImages(const string &strAssociationFilename, vector<string> &vstrImageFilenamesRGB,
-                vector<string> &vstrImageFilenamesD, vector<double> &vTimestamps)
+void LoadImages(const string& strAssociationFilename, vector<string>& vstrImageFilenamesRGB,
+    vector<string>& vstrImageFilenamesD, vector<double>& vTimestamps)
 {
     ifstream fAssociation;
     fAssociation.open(strAssociationFilename.c_str());
-    while (!fAssociation.eof())
-    {
+    while (!fAssociation.eof()) {
         string s;
         getline(fAssociation, s);
-        if (!s.empty())
-        {
+        if (!s.empty()) {
             stringstream ss;
             ss << s;
             double t;

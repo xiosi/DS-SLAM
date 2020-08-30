@@ -1,0 +1,12 @@
+Trans RMSE: 0.0724
+Trans MEAN: 0.0351
+Trans MEDIAN: 0.0204
+Trans STD: 0.0634
+Trans MIN: 0.0017
+Trans MAX: 0.5109
+Rotation RMSE: 1.5281
+Rotation MEAN: 0.7991
+Rotation MEDIAN: 0.0083
+Rotation STD: 1.3025
+Rotation MIN: 0.0561
+Rotation MAX: 10.0771

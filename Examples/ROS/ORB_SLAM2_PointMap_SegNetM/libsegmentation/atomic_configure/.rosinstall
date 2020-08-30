@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/yubao/data/project/DS-SLAM/Examples/ROS/ORB_SLAM2_PointMap_SegNetM/libsegmentation/devel/setup.sh

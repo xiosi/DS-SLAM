@@ -51,41 +51,39 @@
  *--------------------------------------------------------------------------------------------------
  */
 
-
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <string>
 #include <thread>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
-#include "Tracking.h"
-#include "Map.h"
+#include "Camera.h"
+#include "Converter.h"
+#include "KeyFrameDatabase.h"
 #include "LocalMapping.h"
 #include "LoopClosing.h"
-#include "KeyFrameDatabase.h"
+#include "Map.h"
 #include "ORBVocabulary.h"
-#include "Viewer.h"
-#include "Converter.h"
 #include "Segment.h"
-#include "Camera.h"
+#include "Tracking.h"
+#include "Viewer.h"
 
 #include "pointcloudmapping.h"
-#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/common/projection_matrix.h>
-#include <pcl/filters/passthrough.h>
 #include <pcl/common/transforms.h>
+#include <pcl/filters/passthrough.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/visualization/cloud_viewer.h>
 
 using std::string;
 
 class PointCloudMapping;
 
-namespace ORB_SLAM2
-{
+namespace ORB_SLAM2 {
 
 class Viewer;
 class Map;
@@ -94,36 +92,34 @@ class LocalMapping;
 class LoopClosing;
 class Segment;
 
-class System
-{
+class System {
 public:
     // Input sensor
-    enum eSensor
-    {
-        MONOCULAR=0,
-        STEREO=1,
-        RGBD=2
+    enum eSensor {
+        MONOCULAR = 0,
+        STEREO = 1,
+        RGBD = 2
     };
 
 public:
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const string &strVocFile, const string &strSettingsFile, const string &pascal_prototxt, const string &pascal_caffemodel, const string &pascal_png, const eSensor sensor=MONOCULAR, Viewer* v=NULL, Map* m=NULL, ORBVocabulary* voc = NULL);
+    System(const string& strVocFile, const string& strSettingsFile, const string& pascal_prototxt, const string& pascal_caffemodel, const string& pascal_png, const eSensor sensor = MONOCULAR, Viewer* v = NULL, Map* m = NULL, ORBVocabulary* voc = NULL);
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
-    cv::Mat TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp);
+    cv::Mat TrackStereo(const cv::Mat& imLeft, const cv::Mat& imRight, const double& timestamp);
 
     // Process the given rgbd frame. Depthmap must be registered to the RGB frame.
     // Input image: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Input depthmap: Float (CV_32F).
     // Returns the camera pose (empty if tracking fails).
-    cv::Mat TrackRGBD( const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp);
+    cv::Mat TrackRGBD(const cv::Mat& im, const cv::Mat& depthmap, const double& timestamp);
 
     // Proccess the given monocular frame
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
-    cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp);
+    cv::Mat TrackMonocular(const cv::Mat& im, const double& timestamp);
 
     // This stops local mapping thread (map building) and performs only camera tracking.
     void ActivateLocalizationMode();
@@ -141,25 +137,25 @@ public:
     // Save camera trajectory in the TUM RGB-D dataset format.
     // Call first Shutdown()
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
-    void SaveTrajectoryTUM(const string &filename);
+    void SaveTrajectoryTUM(const string& filename);
 
     // Save keyframe poses in the TUM RGB-D dataset format.
     // Use this function in the monocular case.
     // Call first Shutdown()
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
-    void SaveKeyFrameTrajectoryTUM(const string &filename);
+    void SaveKeyFrameTrajectoryTUM(const string& filename);
 
     // Save camera trajectory in the KITTI dataset format.
     // Call first Shutdown()
     // See format details at: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
-    void SaveTrajectoryKITTI(const string &filename);
-    
-	Map* GetMap();
-    bool SaveMap(const string &filename);
+    void SaveTrajectoryKITTI(const string& filename);
+
+    Map* GetMap();
+    bool SaveMap(const string& filename);
     int GetStatus();
     void SetStatus(int status);
 
-    Tracking* GetTracker() {return mpTracker;}
+    Tracking* GetTracker() { return mpTracker; }
     // For the semantic segmentation thread
     Segment* mpSegment;
     std::thread* mptSegment;
@@ -206,6 +202,6 @@ private:
     boost::shared_ptr<PointCloudMapping> mpPointCloudMapping;
 };
 
-}// namespace ORB_SLAM
+} // namespace ORB_SLAM
 
 #endif // SYSTEM_H

@@ -1,0 +1,23 @@
+version: '2.3'
+services:
+  dsslam:
+    image: yubaoliu/ds_slam:kinetic
+    build:
+        context: .
+    container_name: dsslam
+    privileged: true
+    runtime: nvidia
+    command: xterm
+         # lxterminal
+    environment:
+        - DISPLAY
+        - QT_X11_NO_MITSHM=1
+    volumes:
+        - /tmp/.X11-unix:/tmp/.X11-unix:rw
+        - ../:/root/catkin_ws/src/DS-SLAM
+        - ${DATASET_DIR}:/root/Dataset
+        # - orbslam3:/root
+    network_mode: host
+    entrypoint: /ros_entrypoint.sh
+# volumes:
+     # dsslam:
