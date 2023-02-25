@@ -1,0 +1,1 @@
+set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")

@@ -1,5 +1,15 @@
 FROM yubaoliu/root:ros-cuda10.0-cudnn7-ubuntu16.04
 
+#nvidia key vailable: NO_PUBKEY A4B469963BF
+RUN rm /etc/apt/sources.list.d/cuda.list
+RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+ADD   https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb .
+RUN   dpkg -i cuda-keyring_1.0-1_all.deb
+#ros  signatures were invalid: KEYEXPIRED 1622248854
+ADD ./ros.asc .
+RUN apt-key add ros.asc
+# RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+
 RUN apt update \
     &&  apt install -f \
     && apt install -y  libglew-dev \
@@ -20,29 +30,50 @@ RUN apt update \
        python-tk \
        libeigen3-dev
 
-## update pip
-RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python  \
-    && curl -kL https://bootstrap.pypa.io/get-pip.py | python3 
+## update pip 2&3 the same url?
+# RUN curl -kL https://bootstrap.pypa.io/pip/2.7/get-pip.py | python  \
+#     && curl -kL https://bootstrap.pypa.io/pip/3.5/get-pip.py | python3 
+# ADD ./get-pip2.py
+RUN /usr/bin/python -m pip install --upgrade pip
+
+#change source
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+    && pip config set install.trusted-host mirrors.aliyun.com
+RUN pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple \
+    && pip3 config set install.trusted-host mirrors.aliyun.com
  
 ## coco API
-RUN pip2 install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
-RUN pip3 install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+
+# RUN pip2 install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+# RUN pip3 install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+RUN pip2 install git+https://gitee.com/wsyin/cocoapi.git#subdirectory=PythonAPI
+RUN pip3 install git+https://gitee.com/wsyin/cocoapi.git#subdirectory=PythonAPI
 
 # Install mask rcnn dependencies
 COPY requirements.txt /root/requirements.txt
+
 RUN  pip2 install  -r /root/requirements.txt --ignore-installed enum34
 RUN  pip3 install  -r /root/requirements.txt
 
 WORKDIR /root/
 
 # Download Maskrcnn modle
+# RUN mkdir /root/cnnmodel \
+#    && cd /root/cnnmodel \
+#    && wget -c http://mi.eng.cam.ac.uk/~agk34/resources/SegNet/segnet_pascal.caffemodel
+
 RUN mkdir /root/cnnmodel \
    && cd /root/cnnmodel \
-   && wget -c http://mi.eng.cam.ac.uk/~agk34/resources/SegNet/segnet_pascal.caffemodel
+   && wget https://www.dropbox.com/s/fa3itnxxbw3pgn9/segnet_pascal.caffemodel?dl=0
+
+#set git proxy
+# RUN git config --global https.proxy https://127.0.0.1:8889 \
+#     && git config --global http.proxy http://127.0.0.1:8889
 
 #Pangolin
-RUN git clone https://github.com/stevenlovegrove/Pangolin.git \
+RUN git clone https://gitee.com/fghydx-osc_admin/Pangolin \
     && cd Pangolin \
+    && git checkout v0.6 \
     && mkdir build \
     && cd build \
     && cmake .. -DCMAKE_BUILD_TYPE=Debug \
@@ -77,20 +108,28 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git \
 
 
 ## Caffe-SegNet
-RUN  git clone https://github.com/yubaoliu/caffe-segnet.git
+RUN  git clone https://gitee.com/xiosi/caffe-segnet \
 #RUN  git clone https://github.com/yubaoliu/caffe-segnet.git \
-#    && cd caffe-segnet \
-#    && mkdir build  \
-#    && cd build \
-#    && cmake .. -DCMAKE_BUILD_TYPE=Release  -DCMAKE_INSTALL_PREFIX=/usr/local \
-#    && make -j2 \
-#    && make install 
+   && cd caffe-segnet \
+   && mkdir build  \
+   && sed -i "s/20 21(20) 30 35 50 60 61/30 35 50 60 61/g" ./cmake/Cuda.cmake \
+   && cat ./cmake/Cuda.cmake \
+   && cd build \
+   && cmake .. -DCMAKE_BUILD_TYPE=Release  -DCMAKE_INSTALL_PREFIX=/usr/local \
+   && make -j2 \
+   && make install 
 
 
 WORKDIR /root/catkin_ws/src
 # Octomap
-RUN git clone https://github.com/yubaoliu/octomap_mapping.git \
-    && git clone https://github.com/yubaoliu/octomap_rviz_plugins.git 
+RUN git clone https://gitee.com/mirrors_OctoMap/octomap_mapping \
+    && cd octomap_mapping \
+    && git checkout kinetic-devel \
+    && cd /root/catkin_ws/src \
+    && git clone https://gitee.com/jpsir/octomap_rviz_plugins \
+    && cd octomap_rviz_plugins \
+    && git checkout kinetic-devel \
+    && cd /root/catkin_ws/src 
 #    && cd /root/catkin_ws \
 #    && /bin/bash -c "source /opt/ros/kinetic/setup.bash & catkin_make"
 
