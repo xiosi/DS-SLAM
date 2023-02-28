@@ -176,9 +176,12 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
 
     //Initialize the Viewer thread and launch
-    mpViewer = pViewer;
+    cout << "Viewer pre register" << endl;
+    // mpViewer = pViewer;
+    mpViewer = new PangolinViewer(strSettingsFile);
     if (mpViewer != NULL)
     {
+        cout << "Viewer register" << endl;
         mpViewer->Register(this);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);

@@ -71,6 +71,7 @@
 #include "Segment.h"
 #include "Tracking.h"
 #include "Viewer.h"
+#include "PangolinViewer.h"
 
 #include "pointcloudmapping.h"
 #include <pcl/common/projection_matrix.h>
@@ -91,6 +92,7 @@ class Tracking;
 class LocalMapping;
 class LoopClosing;
 class Segment;
+class PangolinViewer;
 
 class System {
 public:

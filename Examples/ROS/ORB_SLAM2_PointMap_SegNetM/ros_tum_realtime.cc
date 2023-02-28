@@ -100,7 +100,8 @@ int main(int argc, char** argv)
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::Viewer* viewer;
-    viewer = new ORB_SLAM2::Viewer();
+    // viewer = new ORB_SLAM2::Viewer();
+    // viewer = new ORB_SLAM2::PangolinViewer();
     ORB_SLAM2::System SLAM(argv[1], argv[2], argv[5], argv[6], argv[7], ORB_SLAM2::System::RGBD, viewer);
     usleep(50);
     // Vector for tracking time statistics
