@@ -351,6 +351,7 @@ void Frame::ExtractORBDesp(int flag, const cv::Mat &imgray)
 /**
  * Epipolar constraints and output the T matrix.
  * Save outliers to T_M
+ * Todo! need add Homography to solve this pure rotation problem
  */
 void Frame::ProcessMovingObject(const cv::Mat &imgray)
 {
@@ -395,6 +396,8 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
     // F-Matrix
     cv::Mat mask = cv::Mat(cv::Size(1, 300), CV_8UC1);
     cv::Mat F = cv::findFundamentalMat(F_prepoint, F_nextpoint, mask, cv::FM_RANSAC, 0.1, 0.99);
+    //H-Matrix
+    // cv::Mat H = cv::findHomography(F_prepoint, F_nextpoint, cv::FM_RANSAC);
     for (int i = 0; i < mask.rows; i++)
     {
         if (mask.at<uchar>(i, 0) == 0)
@@ -406,6 +409,9 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
             double B = F.at<double>(1, 0) * F_prepoint[i].x + F.at<double>(1, 1) * F_prepoint[i].y + F.at<double>(1, 2);
             double C = F.at<double>(2, 0) * F_prepoint[i].x + F.at<double>(2, 1) * F_prepoint[i].y + F.at<double>(2, 2);
             double dd = fabs(A * F_nextpoint[i].x + B * F_nextpoint[i].y + C) / sqrt(A * A + B * B); //Epipolar constraints
+            //Delau trianguar
+            
+            // cv::perspectiveTransform();
             if (dd <= 0.1)
             {
                 F2_prepoint.push_back(F_prepoint[i]);
@@ -416,6 +422,7 @@ void Frame::ProcessMovingObject(const cv::Mat &imgray)
     F_prepoint = F2_prepoint;
     F_nextpoint = F2_nextpoint;
 
+    //mucher points
     for (int i = 0; i < prepoint.size(); i++)
     {
         if (state[i] != 0)

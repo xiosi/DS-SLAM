@@ -850,6 +850,7 @@ layer {
     stride: 2
   }
 }
+#add attention
 layer {
   name: "upsample5_drop"
   type: "Dropout"

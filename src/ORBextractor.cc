@@ -1096,7 +1096,7 @@ int ORBextractor::CheckMovingKeyPoints(const cv::Mat &imGray, const cv::Mat &imS
             break;
     }
 
-    // Moving
+    // Moving todo move outlier
     if (flag_orb_mov == 1)
     {
         for (int level = 0; level < nlevels; ++level)

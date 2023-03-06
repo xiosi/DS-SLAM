@@ -102,6 +102,7 @@ void Segment::Run()
             imgIndex++;
         }
         mSkipIndex++;
+        //将分割结果存储到mImgSegmentLatest中，并设置mpTracker的mbNewSegImgFlag标志位。
         ProduceImgSegment();
         if (CheckFinish())
         {
